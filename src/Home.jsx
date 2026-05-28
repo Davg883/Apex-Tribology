@@ -1,364 +1,629 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
-import './index.css';
+import GeneralFaultMatrix from './components/GeneralFaultMatrix';
 
-// SVG Icons
-const IconTribology = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2.5a5.5 5.5 0 0 0-5.5 5.5c0 4.5 5.5 13.5 5.5 13.5s5.5-9 5.5-13.5A5.5 5.5 0 0 0 12 2.5z" />
-    <path d="M12 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" />
-  </svg>
-);
+export default function Home() {
+  const [vehicleMakeModel, setVehicleMakeModel] = useState('');
+  const [mileage, setMileage] = useState('');
+  const [oilInterval, setOilInterval] = useState('');
+  const [debrisStatus, setDebrisStatus] = useState('Unverified');
+  const [formStatus, setFormStatus] = useState('SUBMIT TELEMETRY DATA');
 
-const IconMetallurgy = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 2 7 12 12 22 7 12 2" />
-    <polyline points="2 17 12 22 22 17" />
-    <polyline points="2 12 12 17 22 12" />
-  </svg>
-);
-
-const IconSystems = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8" />
-    <path d="M10 19v-3.96" />
-    <path d="M14 17h8" />
-    <path d="m19 14 3 3-3 3" />
-  </svg>
-);
-
-const RiskGauge = ({ value, color }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto', marginRight: '1rem' }}>
-    <div style={{ width: '60px', height: '6px', backgroundColor: 'var(--color-border)', borderRadius: '3px', overflow: 'hidden' }}>
-      <div style={{ width: `${value}%`, height: '100%', backgroundColor: color }}></div>
-    </div>
-    <span className="font-mono text-muted" style={{ fontSize: '0.8rem', minWidth: '35px', textAlign: 'right' }}>{value}%</span>
-  </div>
-);
-
-function Home() {
-  const formRef = useRef();
-  const [activeAccordion, setActiveAccordion] = useState(null);
-  const [hasDebris, setHasDebris] = useState('unknown');
-  const [formStatus, setFormStatus] = useState('idle'); // idle, sending, sent, error
-
-  const toggleAccordion = (index) => {
-    setActiveAccordion(activeAccordion === index ? null : index);
-  };
-
-  const sendEmail = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-    setFormStatus('sending');
+    setFormStatus('TRANSMITTING TELEMETRY...');
 
-    const form = e.target;
     const templateParams = {
-      user_name: form.user_name.value,
-      user_phone: form.user_phone.value,
-      vehicle_model: form.vehicle_model.value,
-      mileage: form.mileage.value,
-      oil_history: form.oil_history.value,
-      metal_debris: hasDebris === 'yes' ? "YES - URGENT" : hasDebris === 'no' ? "No" : "Unknown",
-      fault_codes: form.fault_codes.value,
-      urgency_flag: hasDebris === 'yes' ? "CRITICAL" : "Standard",
+      engine_code: vehicleMakeModel || "Not Specified",
+      mileage: mileage || "Not Specified",
+      oil_interval: oilInterval || "Not Specified",
+      debris: debrisStatus,
+      platform: "General Diagnostic Hub",
+      urgency_flag: debrisStatus === 'Yes' ? 'CRITICAL - EMERGENCY' : 'Standard'
     };
 
     emailjs.send('service_q31xrit', 'template_0wyha4j', templateParams, 'FrmJMuq1qfwiBbp_Y')
-      .then((result) => {
-        console.log(result.text);
-        setFormStatus('sent');
-      }, (error) => {
-        console.log(error.text);
-        setFormStatus('error');
+      .then(() => {
+        setFormStatus('TELEMETRY SECURELY RECEIVED');
+        setTimeout(() => {
+          setVehicleMakeModel('');
+          setMileage('');
+          setOilInterval('');
+          setDebrisStatus('Unverified');
+          setFormStatus('SUBMIT TELEMETRY DATA');
+        }, 5000);
+      })
+      .catch((err) => {
+        console.error("FAILED TO TRANSMIT:", err);
+        setFormStatus('TRANSMISSION ERROR - RETRYING');
+        setTimeout(() => setFormStatus('SUBMIT TELEMETRY DATA'), 3000);
       });
   };
 
   return (
-    <div className="app-container">
-      {/* Header */}
-      <header className="header">
-        <div className="logo">
-          Apex <span>Tribology</span>
-        </div>
-        <nav className="nav-links">
-          <a href="#philosophy">Philosophy</a>
-          <a href="#diagnostics">Diagnostics</a>
-          <a href="#remediation">Remediation</a>
-          <a href="#intake">Intake Form</a>
+    <div className="hub-page-wrapper">
+      <Helmet>
+        <title>Apex Tribology | General Diagnostics & Triage Hub</title>
+        <meta name="description" content="Precision engineer-led vehicle diagnostic center. In-cylinder transducers, oscilloscopes, and CAN bus network troubleshooting on the Isle of Wight." />
+      </Helmet>
+
+      {/* --- EMBEDDED DYNAMIC VANILLA CSS BLOCK --- */}
+      <style>{`
+        .hub-page-wrapper {
+          background-color: #111111;
+          color: #E0E0E0;
+          font-family: 'Inter', sans-serif;
+          min-height: 100vh;
+          font-size: 15px;
+          line-height: 1.6;
+        }
+
+        .hub-mono {
+          font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
+
+        /* --- Header / Navigation --- */
+        .system-status-header {
+          background-color: #0A0A0A;
+          border-bottom: 1px solid #2B2B2B;
+          padding: 0.8rem 2rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 0.75rem;
+          color: #007BFF;
+        }
+
+        .system-status-header a {
+          color: #E0E0E0;
+          text-decoration: none;
+          margin-left: 1.5rem;
+          font-weight: bold;
+          transition: color 0.2s;
+        }
+
+        .system-status-header a:hover {
+          color: #007BFF;
+        }
+
+        /* --- Hero Section --- */
+        .hub-hero {
+          position: relative;
+          padding: 8rem 2rem;
+          text-align: center;
+          background-image: linear-gradient(rgba(17,17,17,0.85), rgba(17,17,17,0.95)), url('https://images.unsplash.com/photo-1616788494707-ec28f08d05a1?q=80&w=1920&auto=format&fit=crop');
+          background-size: cover;
+          background-position: center;
+          border-bottom: 1px solid #2B2B2B;
+        }
+
+        .hero-title {
+          font-size: 3.2rem;
+          font-weight: 900;
+          letter-spacing: -1px;
+          line-height: 1.1;
+          margin-bottom: 1.5rem;
+          text-transform: uppercase;
+        }
+
+        .hero-title span {
+          color: #007BFF;
+          font-family: 'JetBrains Mono', monospace;
+          font-weight: 300;
+          font-size: 2rem;
+          display: block;
+          margin-top: 0.5rem;
+        }
+
+        .hero-description {
+          color: #A0A0A0;
+          max-width: 800px;
+          margin: 0 auto;
+          font-size: 1.1rem;
+          line-height: 1.7;
+        }
+
+        /* --- Core Layout Containers --- */
+        .hub-container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 5rem 2rem;
+        }
+
+        .section-header {
+          border-bottom: 1px solid #2B2B2B;
+          padding-bottom: 1.2rem;
+          margin-bottom: 3rem;
+        }
+
+        .section-tag {
+          font-size: 0.7rem;
+          font-family: 'JetBrains Mono', monospace;
+          letter-spacing: 2.5px;
+          color: #007BFF;
+          text-transform: uppercase;
+          display: block;
+          margin-bottom: 0.5rem;
+        }
+
+        .section-title {
+          font-size: 2.2rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          margin: 0;
+          letter-spacing: -0.5px;
+        }
+
+        /* --- Pillars Grid --- */
+        .pillars-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 2rem;
+          margin-bottom: 5rem;
+        }
+
+        .pillar-card {
+          background-color: #151515;
+          border: 1px solid #2B2B2B;
+          border-radius: 6px;
+          padding: 2rem;
+          transition: all 0.3s ease;
+        }
+
+        .pillar-card:hover {
+          border-color: #007BFF;
+          transform: translateY(-4px);
+        }
+
+        .pillar-num {
+          font-size: 0.7rem;
+          font-family: 'JetBrains Mono', monospace;
+          color: #007BFF;
+          display: block;
+          margin-bottom: 1.2rem;
+        }
+
+        .pillar-title {
+          font-size: 1.15rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          margin-bottom: 1rem;
+        }
+
+        .pillar-desc {
+          font-size: 0.85rem;
+          line-height: 1.6;
+          color: #A0A0A0;
+        }
+
+        /* --- Brand Portal CTA --- */
+        .brand-portal-cta {
+          background: linear-gradient(135deg, #151515 0%, #0D0D0D 100%);
+          border: 1px solid #333333;
+          border-radius: 8px;
+          padding: 3rem;
+          text-align: center;
+          margin-bottom: 6rem;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .cta-border-glow {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background: linear-gradient(90deg, #007BFF, #FF4500, #00E5FF);
+        }
+
+        .cta-title {
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          margin-bottom: 1rem;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        .cta-desc {
+          font-size: 0.95rem;
+          color: #A0A0A0;
+          max-width: 650px;
+          margin: 0 auto 2rem auto;
+        }
+
+        .cta-button {
+          display: inline-block;
+          background-color: #007BFF;
+          color: #000000;
+          border: none;
+          padding: 1.1rem 2.2rem;
+          font-size: 0.75rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-weight: bold;
+          letter-spacing: 1.5px;
+          text-decoration: none;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+          box-shadow: 0 0 15px rgba(0, 123, 255, 0.25);
+        }
+
+        .cta-button:hover {
+          background-color: #0056B3;
+          color: #FFFFFF;
+          box-shadow: 0 0 25px rgba(0, 123, 255, 0.45);
+        }
+
+        /* --- Intake Section --- */
+        .intake-layout-grid {
+          display: grid;
+          grid-template-columns: 1fr 1.2fr;
+          gap: 4rem;
+        }
+
+        @media (max-width: 900px) {
+          .intake-layout-grid {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+          }
+        }
+
+        .intake-info h3 {
+          font-size: 1.8rem;
+          font-weight: 800;
+          color: #FFFFFF;
+          margin-bottom: 1.5rem;
+        }
+
+        .intake-info p {
+          font-size: 0.95rem;
+          line-height: 1.7;
+          color: #A0A0A0;
+          margin-bottom: 2rem;
+        }
+
+        .intake-box {
+          background-color: #151515;
+          border: 1px solid #2B2B2B;
+          border-radius: 6px;
+          padding: 2.5rem;
+        }
+
+        .form-row-2 {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+
+        @media (max-width: 600px) {
+          .form-row-2 {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+          }
+        }
+
+        .intake-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .intake-group label {
+          display: block;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: #888888;
+          letter-spacing: 1.5px;
+          margin-bottom: 0.6rem;
+          text-transform: uppercase;
+        }
+
+        .intake-input {
+          width: 100%;
+          background-color: #111111;
+          border: 1px solid #333333;
+          color: #FFFFFF;
+          padding: 0.9rem 1.2rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.85rem;
+          border-radius: 4px;
+          outline: none;
+          transition: border-color 0.3s ease;
+        }
+
+        .intake-input:focus {
+          border-color: #007BFF;
+        }
+
+        .radio-cluster {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.5rem;
+        }
+
+        .radio-option {
+          background: transparent;
+          border: 1px solid #333333;
+          padding: 0.8rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.72rem;
+          font-weight: bold;
+          color: #888888;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: all 0.3s ease;
+        }
+
+        .submit-btn {
+          width: 100%;
+          border: none;
+          padding: 1.2rem;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.75rem;
+          font-weight: bold;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: all 0.4s ease;
+        }
+
+        @keyframes alertFlash {
+          0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+          50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
+          100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+        }
+
+        /* --- Footer --- */
+        .hub-footer {
+          border-top: 1px solid #333333;
+          background-color: #0F0F0F;
+          padding: 3rem 2rem;
+          margin-top: 6rem;
+        }
+
+        .footer-flex {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+        }
+
+        .footer-left {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 0.75rem;
+          color: #666666;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 2rem;
+          align-items: center;
+          font-size: 0.75rem;
+          font-family: 'JetBrains Mono', monospace;
+        }
+
+        .footer-links a {
+          color: #888888;
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+          color: #FFFFFF;
+        }
+      `}</style>
+
+      {/* --- Stark monospaced header showing active tools --- */}
+      <header className="system-status-header font-mono">
+        <span>SYS.ACTIVE: OSCILLOSCOPE_BUS_MONITOR // PRESSURE_TRANSDUCER // ULTRASONIC_SMOKE</span>
+        <nav>
+          <a href="#triage-tree">Triage Tree</a>
+          <a href="#pillars">Four Pillars</a>
+          <a href="#intake">Telemetry Intake</a>
         </nav>
       </header>
 
-      {/* Hero Section */}
-      <section className="hero">
-        <img src="/hero-bg.png" alt="Perfectly honed cylinder bore" className="hero-bg" />
-        <div className="container">
-          <div className="hero-content">
-            <h1>Beyond Factory Specs:<br /><span className="text-accent">Scientific Solutions</span><br />for TDV6 Failure.</h1>
-            <p className="font-mono">
-              We don't just replace parts. We diagnose the failure cascade, upgrade the metallurgy, and restore hydrodynamic stability.
+      {/* --- HERO SECTION --- */}
+      <section className="hub-hero">
+        <div className="hero-title font-mono">
+          [ APEX TRIBOLOGY &amp; DIAGNOSTICS ]
+          <span>WE DO NOT SWAP PARTS. WE IDENTIFY ROOT CAUSES MATHEMATICALLY.</span>
+        </div>
+        <p className="hero-description">
+          The South Coast's engineer-led vehicle diagnostic center. Every mechanical fault, network drop, or fluid seep leaves a unique physical signature. We apply dynamic in-cylinder pressure profiling, bus line analysis, and digital scope sweeps to verify failure dynamics with absolute scientific certainty.
+        </p>
+      </section>
+
+      <div className="hub-container">
+        
+        {/* --- SECTION 1: GENERAL FAULT TRIAGE MATRIX --- */}
+        <section id="triage-tree" className="section-header">
+          <span className="section-tag">// Step-by-Step Diagnostics</span>
+          <h2 className="section-title">General Fault Triage Tree</h2>
+        </section>
+
+        <GeneralFaultMatrix />
+
+        {/* --- SECTION 2: STANDARD DIAGNOSTIC OFFERINGS (THE FOUR PILLARS) --- */}
+        <section id="pillars" className="section-header" style={{ marginTop: '5rem' }}>
+          <span className="section-tag">// Core System Operations</span>
+          <h2 className="section-title">The Four Pillars of Triage</h2>
+        </section>
+
+        <div className="pillars-grid">
+          <div className="pillar-card">
+            <span className="pillar-num">[01]</span>
+            <h3 className="pillar-title">Oscillographic Sensor Evaluation</h3>
+            <p className="pillar-desc">
+              We capture and profile raw electrical signaling cycles directly from camshaft, crankshaft, and oxygen sensors, exposing micro-voltage anomalies standard OBD diagnostic scanners fail to report.
             </p>
-            <a href="#intake" className="btn btn-accent">Book a Forensic Diagnostic</a>
           </div>
-        </div>
-      </section>
 
-      {/* Engineering Philosophy */}
-      <section id="philosophy" className="section">
-        <div className="container">
-          <h2 className="text-muted" style={{ fontSize: '0.9rem' }}>Phase 01</h2>
-          <h2>Engineering <span className="text-accent-blue">Philosophy</span></h2>
-          <div className="grid-3" style={{ marginTop: '3rem' }}>
-            <div className="card">
-              <div className="card-icon"><IconTribology /></div>
-              <h3>Tribology</h3>
-              <p className="font-mono text-muted">
-                Optimizing oil pressure and hydrodynamic film stability to prevent bearing rotation.
-              </p>
-            </div>
-            <div className="card">
-              <div className="card-icon"><IconMetallurgy /></div>
-              <h3>Metallurgy</h3>
-              <p className="font-mono text-muted">
-                Replacing brittle cast iron with forged/billet steel to eliminate torsional shear.
-              </p>
-            </div>
-            <div className="card">
-              <div className="card-icon"><IconSystems /></div>
-              <h3>Systems Analysis</h3>
-              <p className="font-mono text-muted">
-                Correcting systemic flow restrictions from the injector seal to the oil pump.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Diagnostic Hierarchy */}
-      <section id="diagnostics" className="section" style={{ backgroundColor: 'rgba(255,255,255,0.01)' }}>
-        <div className="container grid-2">
-          <div>
-            <h2 className="text-muted" style={{ fontSize: '0.9rem' }}>Phase 02</h2>
-            <h2>Diagnostic <span className="text-accent">Hierarchy</span></h2>
-            <p className="font-mono text-muted" style={{ marginBottom: '2rem', maxWidth: '400px' }}>
-              Select a presenting symptom to view preliminary telemetry and failure probability mapping.
+          <div className="pillar-card">
+            <span className="pillar-num">[02]</span>
+            <h3 className="pillar-title">Transducer Compression Analysis</h3>
+            <p className="pillar-desc">
+              By threading electronic pressure transducers directly into engine cylinders, we map dynamic mechanical displacement profiles in real-time, verifying mechanical timing and valve integrity.
             </p>
-            <img src="/crankshaft.png" alt="Macro Crankshaft" style={{ width: '100%', border: '1px solid var(--color-border)', opacity: 0.8 }} />
           </div>
-          <div>
-            <div className="accordion">
-              {/* Accordion Item 1 */}
-              <div className="accordion-item">
-                <button
-                  className={`accordion-header ${activeAccordion === 0 ? 'active' : ''}`}
-                  onClick={() => toggleAccordion(0)}
-                >
-                  <span style={{ flex: 1 }}>[Acoustic: Low-Frequency Knock]</span>
-                  <RiskGauge value={95} color="var(--color-accent)" />
-                  <span>{activeAccordion === 0 ? '-' : '+'}</span>
-                </button>
-                <div className={`accordion-content ${activeAccordion === 0 ? 'active' : ''}`}>
-                  <div className="diagnostic-result">
-                    <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#fff' }}>ACTION REQUIRED: IMMEDIATE TEARDOWN</strong>
-                    Probability of main bearing failure: 92%. Continued operation will result in catastrophic block ventilation.
-                  </div>
-                </div>
-              </div>
 
-              {/* Accordion Item 2 */}
-              <div className="accordion-item">
-                <button
-                  className={`accordion-header ${activeAccordion === 1 ? 'active' : ''}`}
-                  onClick={() => toggleAccordion(1)}
-                >
-                  <span style={{ flex: 1 }}>[Electronic: P06DD Fault]</span>
-                  <RiskGauge value={85} color="var(--color-accent-blue)" />
-                  <span>{activeAccordion === 1 ? '-' : '+'}</span>
-                </button>
-                <div className={`accordion-content ${activeAccordion === 1 ? 'active' : ''}`}>
-                  <div className="diagnostic-result" style={{ borderColor: 'var(--color-accent-blue)', backgroundColor: 'rgba(0, 123, 255, 0.1)' }}>
-                    <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#fff' }}>DIAGNOSIS: OIL PRESSURE CONTROL FAILURE</strong>
-                    Risk: Catastrophic. Sensor data indicates pump regulation irregularity. Forensics required on pump housing.
-                  </div>
-                </div>
-              </div>
+          <div className="pillar-card">
+            <span className="pillar-num">[03]</span>
+            <h3 className="pillar-title">EVAP &amp; Induction Smoke Triage</h3>
+            <p className="pillar-desc">
+              High-pressure vapor testing allows us to trace unmetered vacuum leaks, split charge-air hoses, and composite manifold cracks down to the micrometer level.
+            </p>
+          </div>
 
-              {/* Accordion Item 3 */}
-              <div className="accordion-item">
-                <button
-                  className={`accordion-header ${activeAccordion === 2 ? 'active' : ''}`}
-                  onClick={() => toggleAccordion(2)}
-                >
-                  <span style={{ flex: 1 }}>[Visual: Metallic Sheen in Filter]</span>
-                  <RiskGauge value={40} color="#FFC107" />
-                  <span>{activeAccordion === 2 ? '-' : '+'}</span>
-                </button>
-                <div className={`accordion-content ${activeAccordion === 2 ? 'active' : ''}`}>
-                  <div className="diagnostic-result" style={{ borderColor: 'var(--color-secondary)', backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                    <strong style={{ display: 'block', marginBottom: '0.5rem', color: '#fff' }}>DIAGNOSIS: MATERIAL SHEAR PROGRESSION</strong>
-                    Risk: High. Babbitt material erosion detected. Full tribological flush and bearing replacement sequence initiated.
-                  </div>
-                </div>
-              </div>
-
-            </div>
+          <div className="pillar-card">
+            <span className="pillar-num">[04]</span>
+            <h3 className="pillar-title">Chassis Electrical Diagnostics</h3>
+            <p className="pillar-desc">
+              We locate parasitic drains, ground deviations, high circuit resistances, and signal line disruptions across delicate multiplexed automotive networks.
+            </p>
           </div>
         </div>
-      </section>
 
-      {/* Specialist Remediation Comparison */}
-      <section id="remediation" className="section">
-        <div className="container">
-          <h2 className="text-muted" style={{ fontSize: '0.9rem', textAlign: 'center' }}>Phase 03</h2>
-          <h2 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Specialist <span className="text-accent-blue">Remediation</span></h2>
-          <p className="font-mono text-accent" style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            We don't do "Standard." We only do "Corrected."
+        {/* --- SECTION 3: BRAND PORTAL CALL-TO-ACTION --- */}
+        <section className="brand-portal-cta">
+          <div className="cta-border-glow"></div>
+          <h3 className="cta-title">OWN JLR, BMW, MINI OR AUDI VAG?</h3>
+          <p className="cta-desc">
+            We maintain direct manufacturer security-gateway credentials, official dealer toolsets (Pathfinder DoIP, ISTA+, ODIS), and server connections to execute complex coding, keys, and adaptations.
           </p>
+          <Link to="/services/platform-cores" className="cta-button">
+            EXECUTE SPECIALIZED PORTAL &gt;&gt;
+          </Link>
+        </section>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table className="comparison-table">
-              <thead>
-                <tr>
-                  <th>Component / Action</th>
-                  <th>Standard Workshop Repair</th>
-                  <th className="highlight-col highlight-header">Apex Engineering Rebuild</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="font-mono">Crankshaft</td>
-                  <td className="text-muted">Cast Iron (OEM Replacement)</td>
-                  <td className="highlight-col font-mono" style={{ color: '#fff' }}>Forged / Billet Steel</td>
-                </tr>
-                <tr>
-                  <td className="font-mono">Oil Pump</td>
-                  <td className="text-muted">Standard Factory Spec</td>
-                  <td className="highlight-col font-mono" style={{ color: '#fff' }}>High-Flow Precision Machined</td>
-                </tr>
-                <tr>
-                  <td className="font-mono">Bearings</td>
-                  <td className="text-muted">OEM Shells</td>
-                  <td className="highlight-col font-mono" style={{ color: '#fff' }}>Tri-Metal / Calico Coated</td>
-                </tr>
-                <tr>
-                  <td className="font-mono">Clearance Tolerance</td>
-                  <td className="text-muted">Factory Range</td>
-                  <td className="highlight-col font-mono" style={{ color: '#fff' }}>Micrometer Matched (&lt;0.0005")</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Intake Form */}
-      <section id="intake" className="section" style={{ backgroundColor: 'rgba(255,255,255,0.01)' }}>
-        <div className="container grid-2">
-          <div>
-            <h2 className="text-muted" style={{ fontSize: '0.9rem' }}>Intake</h2>
-            <h2>Pre-Service <span className="text-accent">Intake</span></h2>
-            <p className="font-mono text-muted" style={{ marginBottom: '2rem' }}>
-              Our forensic process requires strict adherence to data collection. Please provide telemetry regarding your engine's current state to initiate the screening protocol.
+        {/* --- SECTION 4: INTAKE FORM (DIAGNOSTIC TELEMETRY PORTAL) --- */}
+        <div id="intake" className="intake-layout-grid">
+          <div className="intake-info">
+            <span className="section-tag">// Direct Intercept Queue</span>
+            <h3>Intake Telemetry Portal</h3>
+            <p>
+              Initiate forensic staging. Provide vehicle model identifiers, known symptoms, and active fault codes. Abide strictly by accurate mileage and service updates to ensure precise diagnostic slot allocation.
             </p>
+            <div style={{ fontSize: '0.75rem', fontFamily: 'JetBrains Mono, monospace', color: '#666' }}>
+              SECURE LOGS BUFFERING // IOW_DIAGNOSTICS_PORTAL
+            </div>
           </div>
-          <div>
-            <form ref={formRef} className="card" style={{ padding: '2rem' }} onSubmit={sendEmail}>
-              <div className="grid-2" style={{ gap: '1.5rem', marginBottom: '1.5rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Client Name</label>
-                  <input type="text" name="user_name" className="form-control" placeholder="Full Name" required />
+
+          <div className="intake-box">
+            <form onSubmit={handleFormSubmit}>
+              <div className="form-row-2">
+                <div className="intake-group">
+                  <label>VEHICLE MAKE / MODEL / YEAR</label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="e.g., VW Golf R / 2017" 
+                    value={vehicleMakeModel}
+                    onChange={(e) => setVehicleMakeModel(e.target.value)}
+                    className="intake-input" 
+                  />
                 </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Contact Phone</label>
-                  <input type="text" name="user_phone" className="form-control" placeholder="Phone Number" required />
+                <div className="intake-group">
+                  <label>VEHICLE MILEAGE</label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="e.g., 68,000 miles" 
+                    value={mileage}
+                    onChange={(e) => setMileage(e.target.value)}
+                    className="intake-input" 
+                  />
                 </div>
               </div>
 
-              <div className="grid-2" style={{ gap: '1.5rem', marginBottom: '1.5rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Vehicle Model & Year</label>
-                  <input type="text" name="vehicle_model" className="form-control" placeholder="e.g., Discovery 4 / 2016" required />
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Vehicle Mileage</label>
-                  <input type="text" name="mileage" className="form-control" placeholder="e.g., 85,000 km" required />
-                </div>
+              <div className="intake-group">
+                <label>LAST KNOWN OIL CHANGE INTERVAL</label>
+                <select 
+                  required 
+                  value={oilInterval}
+                  onChange={(e) => setOilInterval(e.target.value)}
+                  className="intake-input"
+                  style={{ cursor: 'pointer' }}
+                >
+                  <option value="" disabled className="text-gray-500">Select Interval...</option>
+                  <option value="Under 6,000 miles">Under 6,000 miles (Optimal)</option>
+                  <option value="6,000 - 10,000 miles">6,000 - 10,000 miles (Standard)</option>
+                  <option value="Over 10,000 miles">Over 10,000 miles (Risk Zone)</option>
+                </select>
               </div>
 
-              <div className="grid-2" style={{ gap: '1.5rem', marginBottom: '1.5rem' }}>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Oil Change Interval History</label>
-                  <select name="oil_history" className="form-control" required>
-                    <option value="">Select Interval...</option>
-                    <option value="5k">&lt; 5,000 miles (Enthusiast)</option>
-                    <option value="10k">5,000 - 10,000 miles (Standard)</option>
-                    <option value="15k">&gt; 10,000 miles (Factory Recommended / Risk)</option>
-                    <option value="unknown">Unknown / Secondary Owner</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label">Active Fault Codes</label>
-                  <input type="text" name="fault_codes" className="form-control" placeholder="e.g., P06DD (Optional)" />
-                </div>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '2rem' }}>
-                <label className="form-label">Presence of Metallic Debris in Filter?</label>
-                <div className="radio-group">
-                  <label className="radio-label">
-                    <input type="radio" name="debris" value="yes" checked={hasDebris === 'yes'} onChange={(e) => setHasDebris(e.target.value)} /> Yes
-                  </label>
-                  <label className="radio-label">
-                    <input type="radio" name="debris" value="no" checked={hasDebris === 'no'} onChange={(e) => setHasDebris(e.target.value)} /> No
-                  </label>
-                  <label className="radio-label">
-                    <input type="radio" name="debris" value="unknown" checked={hasDebris === 'unknown'} onChange={(e) => setHasDebris(e.target.value)} /> Unverified
-                  </label>
+              <div className="intake-group">
+                <label>PRESENCE OF METALLIC DEBRIS IN OIL FILTER?</label>
+                <div className="radio-cluster">
+                  {['Yes', 'No', 'Unverified'].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setDebrisStatus(status)}
+                      className="radio-option"
+                      style={{
+                        backgroundColor: debrisStatus === status 
+                          ? (status === 'Yes' ? 'rgba(239,68,68,0.15)' : 'rgba(0, 123, 255, 0.05)') 
+                          : 'transparent',
+                        borderColor: debrisStatus === status 
+                          ? (status === 'Yes' ? '#EF4444' : '#007BFF') 
+                          : '#333333',
+                        color: debrisStatus === status 
+                          ? (status === 'Yes' ? '#EF4444' : '#FFFFFF') 
+                          : '#888888',
+                        boxShadow: debrisStatus === status 
+                          ? `0 0 10px ${status === 'Yes' ? 'rgba(239,68,68,0.3)' : 'rgba(0, 123, 255, 0.15)'}` 
+                          : 'none'
+                      }}
+                    >
+                      {status}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <button
                 type="submit"
-                className={`btn ${hasDebris === 'yes' ? 'btn-emergency' : 'btn-accent'}`}
-                style={{ width: '100%' }}
-                disabled={formStatus === 'sending' || formStatus === 'sent'}
+                disabled={formStatus.includes('SECURELY')}
+                className="submit-btn"
+                style={{
+                  backgroundColor: debrisStatus === 'Yes' ? '#EF4444' : '#007BFF',
+                  borderColor: debrisStatus === 'Yes' ? '#EF4444' : '#007BFF',
+                  color: '#000000',
+                  boxShadow: debrisStatus === 'Yes' 
+                    ? '0 0 20px rgba(239,68,68,0.25)' 
+                    : '0 0 20px rgba(0, 123, 255, 0.25)',
+                  animation: debrisStatus === 'Yes' ? 'alertFlash 2s infinite' : 'none'
+                }}
               >
-                {formStatus === 'sending' ? 'TRANSMITTING DATA...' :
-                  formStatus === 'sent' ? 'TELEMETRY RECEIVED' :
-                    hasDebris === 'yes' ? '[EMERGENCY: STOP ENGINE – REQUEST IMMEDIATE TRANSPORT]' :
-                      'Submit Telemetry Data'}
+                {debrisStatus === 'Yes' && formStatus === 'SUBMIT TELEMETRY DATA' 
+                  ? 'EMERGENCY: REQUEST TOWING & LOCK-IN' 
+                  : formStatus}
               </button>
-
-              {formStatus === 'error' && (
-                <p className="font-mono" style={{ color: '#D32F2F', marginTop: '1rem', fontSize: '0.85rem', textAlign: 'center' }}>
-                  Error transmitting data. Please try again.
-                </p>
-              )}
             </form>
           </div>
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="logo" style={{ marginBottom: '1rem', fontSize: '1.2rem', color: 'var(--color-secondary)' }}>
-            Apex <span>Tribology</span>
+      </div>
+
+      {/* --- FOOTER --- */}
+      <footer className="hub-footer font-mono">
+        <div className="footer-flex">
+          <div className="footer-left">
+            APEX TRIBOLOGY // GENERAL DIAGNOSTIC HUB
           </div>
-          <p>
-            We are currently taking bookings for diagnostic analysis. <br />
-            Please note: We operate on an appointment-only basis to ensure the required focus for forensic engine teardowns.
-          </p>
-          <div style={{marginTop: '1.5rem'}}>
-            <a href="/case-studies/tdv6-crankshaft-failure" className="text-accent-blue font-mono" style={{textDecoration: 'none'}}>
-              [Read our Technical Whitepaper: 306DT Failure Mechanics]
-            </a>
+          <div className="footer-links">
+            <Link to="/services/platform-cores">[ Brand Cores Portal ]</Link>
+            <span style={{ color: '#333' }}>|</span>
+            <a href="/case-studies/tdv6-crankshaft-failure">[ 306DT Technical Dossier ]</a>
           </div>
-          <p style={{ marginTop: '2rem', fontSize: '0.75rem', color: '#333' }}>
-            © 2026 Apex Tribology & Performance. All rights reserved.
-          </p>
         </div>
       </footer>
     </div>
   );
 }
-
-export default Home;
