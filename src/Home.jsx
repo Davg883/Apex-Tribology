@@ -47,6 +47,39 @@ export default function Home() {
       <Helmet>
         <title>Apex Tribology | General Diagnostics & Triage Hub</title>
         <meta name="description" content="Precision engineer-led vehicle diagnostic center. In-cylinder transducers, oscilloscopes, and CAN bus network troubleshooting on the Isle of Wight." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "AutoRepair",
+            "name": "Apex Tribology & Performance",
+            "description": "Sovereign, engineer-led diagnostic and mechanical restoration facility for Jaguar Land Rover, BMW, Mini, and Audi platforms.",
+            "priceRange": "$$$",
+            "areaServed": [
+              {
+                "@type": "AdministrativeArea",
+                "name": "Isle of Wight (Ryde, Cowes, Seaview, Newport)"
+              },
+              {
+                "@type": "AdministrativeArea",
+                "name": "Southern Coastal UK regions"
+              }
+            ],
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "Placeholder Business Park",
+              "addressLocality": "Newport",
+              "addressRegion": "Isle of Wight",
+              "postalCode": "PO30 1AA",
+              "addressCountry": "GB"
+            },
+            "knowsAbout": [
+              "Diagnostics over Internet Protocol (DoIP)",
+              "Component Protection removal",
+              "VANOS timing",
+              "Walnut Blasting"
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* --- EMBEDDED DYNAMIC VANILLA CSS BLOCK --- */}
