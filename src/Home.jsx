@@ -416,6 +416,12 @@ export default function Home() {
         .footer-links a:hover {
           color: #FFFFFF;
         }
+
+        @media (max-width: 400px) {
+          .radio-cluster {
+            grid-template-columns: 1fr !important;
+          }
+        }
       `}</style>
 
       {/* --- Stark monospaced header showing active tools --- */}

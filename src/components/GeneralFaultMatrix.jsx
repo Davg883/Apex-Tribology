@@ -143,6 +143,21 @@ export default function GeneralFaultMatrix() {
           max-width: 320px;
         }
 
+        @media (max-width: 600px) {
+          .node-selector-btn {
+            padding: 0.9rem !important;
+          }
+          .node-btn-symptom {
+            max-width: 180px !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .node-btn-symptom {
+            max-width: 120px !important;
+          }
+        }
+
         /* --- Right Column: Terminal Panel --- */
         .terminal-display {
           background-color: #000000;

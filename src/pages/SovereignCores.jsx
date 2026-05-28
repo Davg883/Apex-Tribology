@@ -62,6 +62,7 @@ export default function SovereignCores() {
   const [activeTab, setActiveTab] = useState('jlr');
   const [sineFrequency, setSineFrequency] = useState(3);
   const [noiseLevel, setNoiseLevel] = useState(1);
+  const [waveOpacity, setWaveOpacity] = useState(1);
 
   // Form states
   const [engineCode, setEngineCode] = useState('');
@@ -72,8 +73,13 @@ export default function SovereignCores() {
 
   // Sync default wave settings when active tab changes
   useEffect(() => {
-    setSineFrequency(PLATFORMS[activeTab].waveformFreq);
-    setNoiseLevel(PLATFORMS[activeTab].waveformNoise);
+    setWaveOpacity(0.1);
+    const timer = setTimeout(() => {
+      setSineFrequency(PLATFORMS[activeTab].waveformFreq);
+      setNoiseLevel(PLATFORMS[activeTab].waveformNoise);
+      setWaveOpacity(1);
+    }, 150);
+    return () => clearTimeout(timer);
   }, [activeTab]);
 
   const generateWavePath = () => {
@@ -588,6 +594,12 @@ export default function SovereignCores() {
         .dashboard-return-banner a:hover {
           text-decoration: underline;
         }
+
+        @media (max-width: 400px) {
+          .intake-radio-cluster {
+            grid-template-columns: 1fr !important;
+          }
+        }
       `}</style>
 
       {/* Return back to Diagnostic Hub */}
@@ -686,7 +698,7 @@ export default function SovereignCores() {
                 <div className="osc-grid-bezel">
                   <div className="osc-lines"></div>
                   <svg className="w-full h-full overflow-visible" viewBox="0 0 600 120" preserveAspectRatio="none" style={{ position: 'relative', zIndex: 2 }}>
-                    <path d={generateWavePath()} fill="none" stroke={currentPlatform.accent} strokeWidth="2.5" />
+                    <path d={generateWavePath()} fill="none" stroke={currentPlatform.accent} strokeWidth="2.5" style={{ opacity: waveOpacity, transition: 'opacity 300ms ease-in-out' }} />
                   </svg>
                 </div>
 
